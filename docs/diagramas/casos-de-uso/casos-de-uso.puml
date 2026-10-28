@@ -1,0 +1,72 @@
+@startuml casos-de-uso
+title Sistema de Moeda Estudantil - Diagrama de Casos de Uso
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #FDFDFD
+  BorderColor #444444
+}
+
+actor "Usuario" as Usuario
+actor "Aluno" as Aluno
+actor "Professor" as Professor
+actor "Empresa Parceira" as Empresa
+actor "Servico de Email" as Email <<sistema>>
+actor "Tempo\n(Agendador)" as Tempo <<sistema>>
+
+Aluno -up-|> Usuario
+Professor -up-|> Usuario
+Empresa -up-|> Usuario
+
+rectangle "Sistema de Moeda Estudantil" {
+  usecase "Realizar login" as UC01
+  usecase "Realizar logout" as UC02
+
+  usecase "Cadastrar-se como aluno" as UC03
+  usecase "Gerenciar perfil de aluno\n(consultar, editar, excluir)" as UC04
+  usecase "Consultar extrato" as UC05
+  usecase "Listar vantagens" as UC06
+  usecase "Resgatar vantagem" as UC07
+  usecase "Gerar codigo de cupom" as UC08
+  usecase "Enviar cupom ao aluno" as UC09
+  usecase "Notificar empresa parceira" as UC10
+
+  usecase "Enviar moedas" as UC11
+  usecase "Notificar aluno por email" as UC12
+
+  usecase "Cadastrar-se como empresa" as UC13
+  usecase "Gerenciar perfil de empresa\n(consultar, editar, excluir)" as UC14
+  usecase "Gerenciar vantagens\n(cadastrar, editar, remover)" as UC15
+
+  usecase "Creditar 1.000 moedas\nsemestrais" as UC16
+}
+
+Usuario --> UC01
+Usuario --> UC02
+
+Aluno --> UC03
+Aluno --> UC04
+Aluno --> UC05
+Aluno --> UC06
+Aluno --> UC07
+UC07 ..> UC08 : <<include>>
+UC07 ..> UC09 : <<include>>
+UC07 ..> UC10 : <<include>>
+
+Professor --> UC11
+Professor --> UC05
+UC11 ..> UC12 : <<include>>
+
+Empresa --> UC13
+Empresa --> UC14
+Empresa --> UC15
+
+Tempo --> UC16
+
+UC09 --> Email
+UC10 --> Email
+UC12 --> Email
+
+note "Todos os casos de uso, exceto os de cadastro,\nexigem autenticacao (Realizar login).\nProfessores e instituicoes de ensino\nsao pre-cadastrados pela parceria." as N1
+@enduml

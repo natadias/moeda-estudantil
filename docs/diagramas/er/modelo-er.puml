@@ -1,0 +1,121 @@
+@startuml modelo-er
+title Sistema de Moeda Estudantil - Modelo Entidade-Relacionamento (PostgreSQL)
+hide circle
+skinparam linetype ortho
+skinparam entity {
+  BackgroundColor #FDFDFD
+  BorderColor #444444
+}
+
+entity "usuario" as usuario {
+  * id : SERIAL <<PK>>
+  --
+  * email : TEXT <<UK>>
+  * login : TEXT <<UK>>
+  * senha_hash : TEXT
+  * tipo : TipoUsuario {ALUNO, PROFESSOR, EMPRESA}
+  * criado_em : TIMESTAMP
+}
+
+entity "instituicao_ensino" as instituicao {
+  * id : SERIAL <<PK>>
+  --
+  * nome : TEXT
+  * cnpj : TEXT <<UK>>
+}
+
+entity "aluno" as aluno {
+  * id : INTEGER <<PK, FK usuario>>
+  --
+  * nome : TEXT
+  * cpf : TEXT <<UK>>
+  * rg : TEXT
+  * curso : TEXT
+  * saldo_moedas : INTEGER = 0
+  * instituicao_id : INTEGER <<FK>>
+}
+
+entity "endereco" as endereco {
+  * id : SERIAL <<PK>>
+  --
+  * aluno_id : INTEGER <<FK, UK>>
+  * logradouro : TEXT
+  * numero : TEXT
+  complemento : TEXT
+  * bairro : TEXT
+  * cidade : TEXT
+  * estado : CHAR(2)
+  * cep : CHAR(8)
+}
+
+entity "professor" as professor {
+  * id : INTEGER <<PK, FK usuario>>
+  --
+  * nome : TEXT
+  * cpf : TEXT <<UK>>
+  * departamento : TEXT
+  * saldo_moedas : INTEGER = 0
+  * instituicao_id : INTEGER <<FK>>
+}
+
+entity "empresa_parceira" as empresa {
+  * id : INTEGER <<PK, FK usuario>>
+  --
+  * nome : TEXT
+  * cnpj : TEXT <<UK>>
+}
+
+entity "vantagem" as vantagem {
+  * id : SERIAL <<PK>>
+  --
+  * nome : TEXT
+  * descricao : TEXT
+  * foto_url : TEXT
+  * custo_moedas : INTEGER
+  * ativa : BOOLEAN = true
+  * empresa_id : INTEGER <<FK>>
+}
+
+entity "transacao" as transacao {
+  * id : SERIAL <<PK>>
+  --
+  * tipo : TipoTransacao {TRANSFERENCIA, RESGATE, CREDITO_SEMESTRAL}
+  * valor : INTEGER
+  * data_hora : TIMESTAMP
+  motivo : TEXT
+  codigo_cupom : TEXT <<UK>>
+  semestre : TEXT
+  professor_id : INTEGER <<FK>>
+  aluno_id : INTEGER <<FK>>
+  vantagem_id : INTEGER <<FK>>
+  --
+  UK (professor_id, semestre)
+}
+
+usuario ||--o| aluno
+usuario ||--o| professor
+usuario ||--o| empresa
+
+instituicao ||--o{ aluno
+instituicao ||--o{ professor
+aluno ||--|| endereco
+empresa ||--o{ vantagem
+
+professor |o--o{ transacao
+aluno |o--o{ transacao
+vantagem |o--o{ transacao
+
+note right of transacao
+  Uma tabela para a hierarquia Transacao
+  (single table inheritance), com "tipo" como discriminador:
+  - TRANSFERENCIA: professor_id, aluno_id, motivo
+  - RESGATE: aluno_id, vantagem_id, codigo_cupom
+  - CREDITO_SEMESTRAL: professor_id, semestre
+end note
+
+note top of usuario
+  Hierarquia Usuario: uma tabela por classe
+  (class table inheritance). Aluno, professor e
+  empresa_parceira usam o mesmo id do usuario.
+end note
+@enduml

@@ -1,0 +1,144 @@
+// Modelo de persistência do Sistema de Moeda Estudantil.
+// Segue o diagrama de classes (docs/diagramas/classes) e o modelo ER (docs/diagramas/er).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TipoUsuario {
+  ALUNO
+  PROFESSOR
+  EMPRESA
+}
+
+enum TipoTransacao {
+  TRANSFERENCIA
+  RESGATE
+  CREDITO_SEMESTRAL
+}
+
+model Usuario {
+  id        Int         @id @default(autoincrement())
+  email     String      @unique
+  login     String      @unique
+  senhaHash String      @map("senha_hash")
+  tipo      TipoUsuario
+  criadoEm  DateTime    @default(now()) @map("criado_em")
+
+  aluno     Aluno?
+  professor Professor?
+  empresa   EmpresaParceira?
+
+  @@map("usuario")
+}
+
+model InstituicaoEnsino {
+  id         Int         @id @default(autoincrement())
+  nome       String
+  cnpj       String      @unique
+  alunos     Aluno[]
+  professores Professor[]
+
+  @@map("instituicao_ensino")
+}
+
+model Aluno {
+  id            Int               @id
+  usuario       Usuario           @relation(fields: [id], references: [id], onDelete: Cascade)
+  nome          String
+  cpf           String            @unique
+  rg            String
+  curso         String
+  saldoMoedas   Int               @default(0) @map("saldo_moedas")
+  instituicaoId Int               @map("instituicao_id")
+  instituicao   InstituicaoEnsino @relation(fields: [instituicaoId], references: [id])
+  endereco      Endereco?
+
+  transacoes    Transacao[]       @relation("TransacaoAluno")
+
+  @@map("aluno")
+}
+
+model Endereco {
+  id          Int     @id @default(autoincrement())
+  alunoId     Int     @unique @map("aluno_id")
+  aluno       Aluno   @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  logradouro  String
+  numero      String
+  complemento String?
+  bairro      String
+  cidade      String
+  estado      String  @db.Char(2)
+  cep         String  @db.Char(8)
+
+  @@map("endereco")
+}
+
+model Professor {
+  id            Int               @id
+  usuario       Usuario           @relation(fields: [id], references: [id], onDelete: Cascade)
+  nome          String
+  cpf           String            @unique
+  departamento  String
+  saldoMoedas   Int               @default(0) @map("saldo_moedas")
+  instituicaoId Int               @map("instituicao_id")
+  instituicao   InstituicaoEnsino @relation(fields: [instituicaoId], references: [id])
+
+  transacoes Transacao[] @relation("TransacaoProfessor")
+
+  @@map("professor")
+}
+
+model EmpresaParceira {
+  id         Int        @id
+  usuario    Usuario    @relation(fields: [id], references: [id], onDelete: Cascade)
+  nome       String
+  cnpj       String     @unique
+  vantagens  Vantagem[]
+
+  @@map("empresa_parceira")
+}
+
+model Vantagem {
+  id          Int             @id @default(autoincrement())
+  nome        String
+  descricao   String
+  fotoUrl     String          @map("foto_url")
+  custoMoedas Int             @map("custo_moedas")
+  ativa       Boolean         @default(true)
+  empresaId   Int             @map("empresa_id")
+  empresa     EmpresaParceira @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  resgates    Transacao[]
+
+  @@map("vantagem")
+}
+
+model Transacao {
+  id          Int           @id @default(autoincrement())
+  tipo        TipoTransacao
+  valor       Int
+  dataHora    DateTime      @default(now()) @map("data_hora")
+
+  // TRANSFERENCIA: professor -> aluno, motivo obrigatório
+  motivo      String?
+  // RESGATE: aluno + vantagem, código de cupom único
+  codigoCupom String?       @unique @map("codigo_cupom")
+  // CREDITO_SEMESTRAL: professor + semestre (ex.: "2026.2")
+  semestre    String?
+
+  professorId Int?          @map("professor_id")
+  professor   Professor?    @relation("TransacaoProfessor", fields: [professorId], references: [id], onDelete: Restrict)
+  alunoId     Int?          @map("aluno_id")
+  aluno       Aluno?        @relation("TransacaoAluno", fields: [alunoId], references: [id], onDelete: Restrict)
+  vantagemId  Int?          @map("vantagem_id")
+  vantagem    Vantagem?     @relation(fields: [vantagemId], references: [id], onDelete: Restrict)
+
+  // No máximo um crédito por professor em cada semestre (NULLs não colidem no PostgreSQL).
+  @@unique([professorId, semestre])
+  @@map("transacao")
+}

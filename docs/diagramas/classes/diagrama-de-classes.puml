@@ -1,0 +1,134 @@
+@startuml diagrama-de-classes
+title Sistema de Moeda Estudantil - Diagrama de Classes
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+hide empty members
+
+abstract class Usuario {
+  - id: Integer
+  - email: String
+  - login: String
+  - senhaHash: String
+  + autenticar(senha: String): Boolean
+}
+
+class Aluno {
+  - nome: String
+  - cpf: String
+  - rg: String
+  - curso: String
+  - saldoMoedas: Integer
+  + receberMoedas(transferencia: TransferenciaMoedas): void
+  + resgatarVantagem(vantagem: Vantagem): ResgateVantagem
+  + consultarExtrato(): List<Transacao>
+}
+
+class Professor {
+  - nome: String
+  - cpf: String
+  - departamento: String
+  - saldoMoedas: Integer
+  + enviarMoedas(aluno: Aluno, valor: Integer, motivo: String): TransferenciaMoedas
+  + receberCreditoSemestral(semestre: String): CreditoSemestral
+  + consultarExtrato(): List<Transacao>
+}
+
+class EmpresaParceira {
+  - nome: String
+  - cnpj: String
+  + cadastrarVantagem(nome: String, descricao: String, foto: String, custo: Integer): Vantagem
+  + editarVantagem(vantagem: Vantagem): void
+  + removerVantagem(vantagem: Vantagem): void
+}
+
+class Endereco {
+  - logradouro: String
+  - numero: String
+  - complemento: String
+  - bairro: String
+  - cidade: String
+  - estado: String
+  - cep: String
+}
+
+class InstituicaoEnsino {
+  - id: Integer
+  - nome: String
+  - cnpj: String
+}
+
+class Vantagem {
+  - id: Integer
+  - nome: String
+  - descricao: String
+  - fotoUrl: String
+  - custoMoedas: Integer
+  - ativa: Boolean
+}
+
+abstract class Transacao {
+  - id: Integer
+  - valor: Integer
+  - dataHora: DateTime
+}
+
+class TransferenciaMoedas {
+  - motivo: String
+}
+
+class ResgateVantagem {
+  - codigoCupom: String
+  + gerarCodigoCupom(): String
+}
+
+class CreditoSemestral {
+  - semestre: String
+}
+
+interface ServicoEmail <<interface>> {
+  + enviarNotificacaoMoedas(transferencia: TransferenciaMoedas): void
+  + enviarCupom(resgate: ResgateVantagem): void
+  + enviarConfirmacaoParceiro(resgate: ResgateVantagem): void
+}
+
+Usuario <|-- Aluno
+Usuario <|-- Professor
+Usuario <|-- EmpresaParceira
+
+Transacao <|-- TransferenciaMoedas
+Transacao <|-- ResgateVantagem
+Transacao <|-- CreditoSemestral
+
+Aluno "1" *-- "1" Endereco : reside em >
+Aluno "0..*" --> "1" InstituicaoEnsino : estuda em >
+Professor "0..*" --> "1" InstituicaoEnsino : vinculado a >
+EmpresaParceira "1" o-- "0..*" Vantagem : oferece >
+
+TransferenciaMoedas "0..*" --> "1" Professor : remetente >
+TransferenciaMoedas "0..*" --> "1" Aluno : destinatario >
+ResgateVantagem "0..*" --> "1" Aluno : resgatado por >
+ResgateVantagem "0..*" --> "1" Vantagem : referente a >
+CreditoSemestral "0..*" --> "1" Professor : creditado a >
+
+ServicoEmail ..> TransferenciaMoedas : <<use>>
+ServicoEmail ..> ResgateVantagem : <<use>>
+
+note bottom of TransferenciaMoedas
+  {valor > 0}
+  {motivo obrigatorio}
+  {valor <= professor.saldoMoedas}
+  {aluno.instituicao = professor.instituicao}
+end note
+
+note bottom of ResgateVantagem
+  {valor = vantagem.custoMoedas}
+  {valor <= aluno.saldoMoedas}
+  {codigoCupom unico}
+end note
+
+note bottom of CreditoSemestral
+  {valor = 1000}
+  Cumulativo: soma ao saldo atual
+  do professor a cada semestre.
+end note
+@enduml

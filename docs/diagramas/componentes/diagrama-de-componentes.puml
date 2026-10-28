@@ -1,0 +1,74 @@
+@startuml diagrama-de-componentes
+title Sistema de Moeda Estudantil - Diagrama de Componentes (MVC)
+skinparam componentStyle uml2
+left to right direction
+
+package "Front-end (React) - View" {
+  [Paginas] as Paginas
+  note right of Paginas
+    Login, Cadastro de Aluno,
+    Cadastro de Empresa, Perfil,
+    Extrato, Vantagens,
+    Envio de Moedas,
+    Gestao de Vantagens
+  end note
+  [Componentes UI] as UI
+  [Cliente HTTP (Axios)] as Api
+  Paginas --> UI
+  Paginas --> Api
+}
+
+package "Back-end (Node.js + Express)" {
+  interface "API REST (JSON)" as IRest
+  [Routes] as Routes
+  [Middleware de Autenticacao\n(JWT + bcrypt)] as Auth
+
+  package "Controller" {
+    [AuthController]
+    [AlunoController]
+    [ProfessorController]
+    [EmpresaController]
+    [VantagemController]
+    [TransacaoController]
+  }
+
+  package "Service (regras de negocio)" {
+    [TransacaoService]
+    [ResgateService]
+    [CreditoSemestralService]
+    [AlunoService]
+    [EmpresaParceiraService]
+  }
+
+  package "Model (persistencia)" {
+    [DAOs\n(AlunoDAO, EmpresaParceiraDAO,\nInstituicaoEnsinoDAO, ...)] as DAO
+    [Prisma Client (ORM)\nschema.prisma] as Prisma
+    DAO --> Prisma
+  }
+
+  interface "IEmail" as IEmail
+  [EmailService\n(Nodemailer)] as EmailSvc
+  [Upload de Fotos\n(Multer)] as Upload
+  [Agendador\n(node-cron)] as Cron
+
+  IRest - Routes
+  Routes --> Auth
+  Routes --> Upload
+  Auth --> Controller
+  Controller --> "Service (regras de negocio)"
+  "Service (regras de negocio)" --> DAO
+  EmailSvc - IEmail
+  [TransacaoService] --( IEmail
+  [ResgateService] --( IEmail
+  Cron --> [CreditoSemestralService]
+}
+
+database "PostgreSQL" as DB
+node "Servidor SMTP" as SMTP
+folder "Armazenamento\nde Imagens" as Storage
+
+Api --( IRest : HTTP/JSON
+Prisma --> DB : SQL
+EmailSvc --> SMTP : SMTP
+Upload --> Storage
+@enduml
