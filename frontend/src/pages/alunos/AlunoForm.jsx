@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import alunoApi from '../../api/alunoApi';
 import { lerErro } from '../../api/http';
 import instituicaoApi from '../../api/instituicaoApi';
 import Alerta from '../../components/Alerta';
 import Campo from '../../components/Campo';
+import { useAuth } from '../../contexts/AuthContext';
 import { formatarCep, formatarCpf } from '../../utils/formatadores';
 
 const VAZIO = {
@@ -38,9 +39,9 @@ function paraFormulario(aluno) {
   };
 }
 
-export default function AlunoForm() {
-  const { id } = useParams();
-  const edicao = Boolean(id);
+export default function AlunoForm({ edicao = false }) {
+  const { usuario, entrar, atualizarUsuario } = useAuth();
+  const id = edicao ? usuario.id : null;
   const navigate = useNavigate();
 
   const [form, setForm] = useState(VAZIO);
@@ -70,11 +71,13 @@ export default function AlunoForm() {
     try {
       const dados = { ...form, instituicaoId: Number(form.instituicaoId) || '' };
       if (edicao) {
-        await alunoApi.atualizar(id, dados);
-        navigate('/alunos', { state: { sucesso: 'Dados do aluno atualizados.' } });
+        const aluno = await alunoApi.atualizar(id, dados);
+        atualizarUsuario({ nome: aluno.nome, email: aluno.email, login: aluno.login });
+        navigate('/aluno/perfil', { state: { sucesso: 'Dados atualizados.' } });
       } else {
         await alunoApi.cadastrar(dados);
-        navigate('/alunos', { state: { sucesso: 'Aluno cadastrado com sucesso.' } });
+        await entrar(dados.login, dados.senha);
+        navigate('/aluno/perfil', { state: { sucesso: 'Cadastro realizado! Bem-vindo(a) ao sistema de mérito.' } });
       }
     } catch (erro) {
       const { mensagem: msg, campos } = lerErro(erro);
@@ -90,7 +93,7 @@ export default function AlunoForm() {
   return (
     <section>
       <div className="cabecalho">
-        <h1>{edicao ? 'Editar aluno' : 'Cadastro de aluno'}</h1>
+        <h1>{edicao ? 'Editar meus dados' : 'Cadastro de aluno'}</h1>
       </div>
       <Alerta>{mensagem}</Alerta>
 
@@ -153,7 +156,7 @@ export default function AlunoForm() {
         </fieldset>
 
         <div className="botoes">
-          <Link to="/alunos" className="botao secundario">Cancelar</Link>
+          <Link to={edicao ? '/aluno/perfil' : '/'} className="botao secundario">Cancelar</Link>
           <button type="submit" className="botao" disabled={enviando}>{enviando ? 'Salvando…' : 'Salvar'}</button>
         </div>
       </form>

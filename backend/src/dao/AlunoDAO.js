@@ -28,8 +28,8 @@ class AlunoDAO {
     });
   }
 
-  findAll() {
-    return prisma.aluno.findMany({ include: INCLUDE, orderBy: { nome: 'asc' } });
+  findAll({ instituicaoId } = {}) {
+    return prisma.aluno.findMany({ where: { instituicaoId }, include: INCLUDE, orderBy: { nome: 'asc' } });
   }
 
   findById(id) {

@@ -1,28 +1,60 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
+import RotaProtegida from './components/RotaProtegida';
+import SomenteVisitante from './components/SomenteVisitante';
+import { AuthProvider } from './contexts/AuthContext';
 import AlunoForm from './pages/alunos/AlunoForm';
-import AlunoLista from './pages/alunos/AlunoLista';
+import PerfilAluno from './pages/alunos/PerfilAluno';
 import EmpresaForm from './pages/empresas/EmpresaForm';
 import EmpresaLista from './pages/empresas/EmpresaLista';
+import PerfilEmpresa from './pages/empresas/PerfilEmpresa';
 import Home from './pages/Home';
+import Login from './pages/Login';
+import MeusAlunos from './pages/professor/MeusAlunos';
+import CatalogoVantagens from './pages/vantagens/CatalogoVantagens';
+import MinhasVantagens from './pages/vantagens/MinhasVantagens';
+import VantagemForm from './pages/vantagens/VantagemForm';
 import './styles.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="alunos" element={<AlunoLista />} />
-          <Route path="alunos/novo" element={<AlunoForm />} />
-          <Route path="alunos/:id" element={<AlunoForm />} />
-          <Route path="empresas" element={<EmpresaLista />} />
-          <Route path="empresas/nova" element={<EmpresaForm />} />
-          <Route path="empresas/:id" element={<EmpresaForm />} />
-        </Route>
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="login" element={<Login />} />
+            <Route path="empresas" element={<EmpresaLista />} />
+
+            <Route element={<SomenteVisitante />}>
+              <Route path="alunos/novo" element={<AlunoForm />} />
+              <Route path="empresas/nova" element={<EmpresaForm />} />
+            </Route>
+
+            <Route element={<RotaProtegida tipos={['ALUNO']} />}>
+              <Route path="aluno/perfil" element={<PerfilAluno />} />
+              <Route path="aluno/perfil/editar" element={<AlunoForm edicao />} />
+              <Route path="vantagens" element={<CatalogoVantagens />} />
+            </Route>
+
+            <Route element={<RotaProtegida tipos={['PROFESSOR']} />}>
+              <Route path="professor/alunos" element={<MeusAlunos />} />
+            </Route>
+
+            <Route element={<RotaProtegida tipos={['EMPRESA']} />}>
+              <Route path="empresa/perfil" element={<PerfilEmpresa />} />
+              <Route path="empresa/perfil/editar" element={<EmpresaForm edicao />} />
+              <Route path="empresa/vantagens" element={<MinhasVantagens />} />
+              <Route path="empresa/vantagens/nova" element={<VantagemForm />} />
+              <Route path="empresa/vantagens/:id" element={<VantagemForm />} />
+            </Route>
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
 );

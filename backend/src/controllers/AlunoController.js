@@ -3,7 +3,7 @@ import parseId from '../utils/parseId.js';
 
 class AlunoController {
   async listar(req, res) {
-    res.json(await alunoService.listar());
+    res.json(await alunoService.listarDaInstituicaoDoProfessor(req.usuario.id));
   }
 
   async buscarPorId(req, res) {

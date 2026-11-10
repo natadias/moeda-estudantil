@@ -40,7 +40,10 @@ async function normalizar(dados) {
 class EmpresaParceiraService {
   async listar() {
     const empresas = await empresaDAO.findAll();
-    return empresas.map(paraResposta);
+    return empresas.map((empresa) => {
+      const { login: _login, ...publico } = paraResposta(empresa);
+      return publico;
+    });
   }
 
   async buscarPorId(id) {

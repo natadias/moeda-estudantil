@@ -2,6 +2,7 @@ services:
   db:
     image: postgres:16-alpine
     container_name: moeda-estudantil-db
+    restart: unless-stopped
     environment:
       POSTGRES_USER: moeda
       POSTGRES_PASSWORD: moeda

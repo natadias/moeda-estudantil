@@ -1,6 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
+import { INICIO_POR_TIPO, useAuth } from '../contexts/AuthContext';
 
 export default function Home() {
+  const { usuario } = useAuth();
+  if (usuario) return <Navigate to={INICIO_POR_TIPO[usuario.tipo]} replace />;
+
   return (
     <section className="home">
       <h1>Sistema de Moeda Estudantil</h1>
@@ -13,6 +17,10 @@ export default function Home() {
         <Link to="/empresas/nova" className="cartao">
           <strong>Sou empresa</strong>
           <span>Cadastre sua empresa para oferecer vantagens aos alunos.</span>
+        </Link>
+        <Link to="/login" className="cartao">
+          <strong>Já tenho conta</strong>
+          <span>Entre como aluno, professor ou empresa parceira.</span>
         </Link>
       </div>
     </section>

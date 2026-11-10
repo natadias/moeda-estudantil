@@ -35,13 +35,25 @@ O [modelo ER](diagramas/er/modelo-er.png) foi derivado do [diagrama de classes](
   - um crédito semestral por professor em cada semestre: `UNIQUE (professor_id, semestre)`;
   - transações não podem perder suas referências (`ON DELETE RESTRICT`).
 
-## DAOs implementados (Sprint 02)
+## DAOs implementados
 
 | DAO | Operações |
 |---|---|
 | `AlunoDAO` | `create`, `findAll`, `findById`, `update`, `delete`. Grava usuário, aluno e endereço numa única operação aninhada. |
 | `EmpresaParceiraDAO` | `create`, `findAll`, `findById`, `update`, `delete`. Grava usuário e empresa; as vantagens são removidas em cascata. |
 | `InstituicaoEnsinoDAO` | `findAll`, `findById`. As instituições são pré-cadastradas pelo seed. |
+| `UsuarioDAO` | `findByLoginOuEmail`, `findById`. Usado pela autenticação (Sprint 03). |
+| `VantagemDAO` | `create`, `findAll` (por empresa ou só ativas), `findById`, `update`, `delete`. Vantagens já resgatadas são desativadas em vez de apagadas (Sprint 03). |
+| `ProfessorDAO` | `findById`. Professores são pré-cadastrados; usado para filtrar os alunos da instituição do professor (Sprint 03). |
+
+## Testes da camada de persistência
+
+Os testes de integração em [`backend/tests/`](../backend/tests/) exercitam a API inteira (rotas → controllers → services → DAOs → PostgreSQL) num banco separado, `moeda_estudantil_test`. Cada arquivo começa com o banco limpo e com o seed aplicado:
+
+```bash
+cd backend
+npm test
+```
 
 ## Comandos
 

@@ -7,41 +7,47 @@ package "Front-end (React) - View" {
   [Paginas] as Paginas
   note right of Paginas
     Login, Cadastro de Aluno,
-    Cadastro de Empresa, Perfil,
-    Extrato, Vantagens,
-    Envio de Moedas,
-    Gestao de Vantagens
+    Cadastro de Empresa, Perfis,
+    Meus Alunos, Vantagens,
+    Gestao de Vantagens,
+    Extrato, Envio de Moedas
   end note
-  [Componentes UI] as UI
-  [Cliente HTTP (Axios)] as Api
+  [Componentes UI\n(Layout, RotaProtegida, ...)] as UI
+  [AuthContext\n(sessao JWT)] as AuthCtx
+  [Cliente HTTP (Axios)\nalunoApi, empresaApi, vantagemApi] as Api
   Paginas --> UI
+  Paginas --> AuthCtx
   Paginas --> Api
+  AuthCtx --> Api
 }
 
 package "Back-end (Node.js + Express)" {
   interface "API REST (JSON)" as IRest
   [Routes] as Routes
-  [Middleware de Autenticacao\n(JWT + bcrypt)] as Auth
+  [Middlewares de Autenticacao\n(autenticar, autorizar, somenteProprio)\nJWT] as Auth
 
   package "Controller" {
     [AuthController]
     [AlunoController]
     [ProfessorController]
-    [EmpresaController]
+    [EmpresaParceiraController]
+    [InstituicaoEnsinoController]
     [VantagemController]
     [TransacaoController]
   }
 
   package "Service (regras de negocio)" {
+    [AuthService\n(bcrypt + JWT)] as AuthSvc
+    [AlunoService]
+    [EmpresaParceiraService]
+    [VantagemService]
     [TransacaoService]
     [ResgateService]
     [CreditoSemestralService]
-    [AlunoService]
-    [EmpresaParceiraService]
   }
 
   package "Model (persistencia)" {
-    [DAOs\n(AlunoDAO, EmpresaParceiraDAO,\nInstituicaoEnsinoDAO, ...)] as DAO
+    [DAOs\n(UsuarioDAO, AlunoDAO, ProfessorDAO,\nEmpresaParceiraDAO, VantagemDAO,\nInstituicaoEnsinoDAO)] as DAO
     [Prisma Client (ORM)\nschema.prisma] as Prisma
     DAO --> Prisma
   }
@@ -55,6 +61,7 @@ package "Back-end (Node.js + Express)" {
   Routes --> Auth
   Routes --> Upload
   Auth --> Controller
+  Auth ..> AuthSvc : valida token
   Controller --> "Service (regras de negocio)"
   "Service (regras de negocio)" --> DAO
   EmailSvc - IEmail
@@ -65,9 +72,9 @@ package "Back-end (Node.js + Express)" {
 
 database "PostgreSQL" as DB
 node "Servidor SMTP" as SMTP
-folder "Armazenamento\nde Imagens" as Storage
+folder "Armazenamento\nde Imagens\n(uploads/)" as Storage
 
-Api --( IRest : HTTP/JSON
+Api --( IRest : HTTP/JSON\nBearer token
 Prisma --> DB : SQL
 EmailSvc --> SMTP : SMTP
 Upload --> Storage

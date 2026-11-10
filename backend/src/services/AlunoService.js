@@ -1,5 +1,6 @@
 import alunoDAO from '../dao/AlunoDAO.js';
 import instituicaoDAO from '../dao/InstituicaoEnsinoDAO.js';
+import professorDAO from '../dao/ProfessorDAO.js';
 import AppError from '../utils/AppError.js';
 import { cpfValido, emailValido, preenchido, somenteDigitos } from '../utils/validators.js';
 import { gerarHash } from './senha.js';
@@ -66,9 +67,15 @@ async function normalizar(dados) {
 }
 
 class AlunoService {
-  async listar() {
-    const alunos = await alunoDAO.findAll();
+  async listar(filtro = {}) {
+    const alunos = await alunoDAO.findAll(filtro);
     return alunos.map(paraResposta);
+  }
+
+  async listarDaInstituicaoDoProfessor(professorId) {
+    const professor = await professorDAO.findById(professorId);
+    if (!professor) throw new AppError('Professor não encontrado.', 404);
+    return this.listar({ instituicaoId: professor.instituicaoId });
   }
 
   async buscarPorId(id) {

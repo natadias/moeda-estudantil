@@ -1,14 +1,50 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+
+const MENUS = {
+  ALUNO: [
+    { para: '/aluno/perfil', rotulo: 'Meu perfil' },
+    { para: '/vantagens', rotulo: 'Vantagens' },
+    { para: '/empresas', rotulo: 'Empresas parceiras' },
+  ],
+  PROFESSOR: [{ para: '/professor/alunos', rotulo: 'Meus alunos' }],
+  EMPRESA: [
+    { para: '/empresa/vantagens', rotulo: 'Minhas vantagens' },
+    { para: '/empresa/perfil', rotulo: 'Meu perfil' },
+  ],
+  ANONIMO: [{ para: '/empresas', rotulo: 'Empresas parceiras' }],
+};
+
+const ROTULO_TIPO = { ALUNO: 'Aluno', PROFESSOR: 'Professor', EMPRESA: 'Empresa' };
 
 export default function Layout() {
+  const { usuario, sair } = useAuth();
+  const navigate = useNavigate();
+
+  function encerrar() {
+    sair();
+    navigate('/login');
+  }
+
   return (
     <>
       <header className="topo">
         <div className="container topo-conteudo">
           <NavLink to="/" className="marca">🪙 Moeda Estudantil</NavLink>
           <nav>
-            <NavLink to="/alunos">Alunos</NavLink>
-            <NavLink to="/empresas">Empresas parceiras</NavLink>
+            {MENUS[usuario?.tipo ?? 'ANONIMO'].map((item) => (
+              <NavLink key={item.para} to={item.para}>{item.rotulo}</NavLink>
+            ))}
+            {usuario ? (
+              <>
+                <span className="usuario-logado" title={usuario.email}>
+                  {usuario.nome} <small>({ROTULO_TIPO[usuario.tipo]})</small>
+                </span>
+                <button type="button" className="link-nav" onClick={encerrar}>Sair</button>
+              </>
+            ) : (
+              <NavLink to="/login">Entrar</NavLink>
+            )}
           </nav>
         </div>
       </header>

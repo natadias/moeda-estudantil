@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import empresaApi from '../../api/empresaApi';
 import { lerErro } from '../../api/http';
 import Alerta from '../../components/Alerta';
 import Campo from '../../components/Campo';
+import { useAuth } from '../../contexts/AuthContext';
 import { formatarCnpj } from '../../utils/formatadores';
 
 const VAZIO = { nome: '', cnpj: '', email: '', login: '', senha: '' };
 
-export default function EmpresaForm() {
-  const { id } = useParams();
-  const edicao = Boolean(id);
+export default function EmpresaForm({ edicao = false }) {
+  const { usuario, entrar, atualizarUsuario } = useAuth();
+  const id = edicao ? usuario.id : null;
   const navigate = useNavigate();
 
   const [form, setForm] = useState(VAZIO);
@@ -35,11 +36,13 @@ export default function EmpresaForm() {
     setMensagem('');
     try {
       if (edicao) {
-        await empresaApi.atualizar(id, form);
-        navigate('/empresas', { state: { sucesso: 'Dados da empresa atualizados.' } });
+        const empresa = await empresaApi.atualizar(id, form);
+        atualizarUsuario({ nome: empresa.nome, email: empresa.email, login: empresa.login });
+        navigate('/empresa/perfil', { state: { sucesso: 'Dados atualizados.' } });
       } else {
         await empresaApi.cadastrar(form);
-        navigate('/empresas', { state: { sucesso: 'Empresa cadastrada com sucesso.' } });
+        await entrar(form.login, form.senha);
+        navigate('/empresa/vantagens', { state: { sucesso: 'Cadastro realizado! Agora cadastre as vantagens que deseja oferecer.' } });
       }
     } catch (erro) {
       const { mensagem: msg, campos } = lerErro(erro);
@@ -53,7 +56,7 @@ export default function EmpresaForm() {
   return (
     <section>
       <div className="cabecalho">
-        <h1>{edicao ? 'Editar empresa parceira' : 'Cadastro de empresa parceira'}</h1>
+        <h1>{edicao ? 'Editar dados da empresa' : 'Cadastro de empresa parceira'}</h1>
       </div>
       <Alerta>{mensagem}</Alerta>
 
@@ -83,11 +86,8 @@ export default function EmpresaForm() {
             />
           </div>
         </fieldset>
-
-        <p className="dica">As vantagens oferecidas pela empresa serão cadastradas na próxima versão do sistema.</p>
-
         <div className="botoes">
-          <Link to="/empresas" className="botao secundario">Cancelar</Link>
+          <Link to={edicao ? '/empresa/perfil' : '/'} className="botao secundario">Cancelar</Link>
           <button type="submit" className="botao" disabled={enviando}>{enviando ? 'Salvando…' : 'Salvar'}</button>
         </div>
       </form>

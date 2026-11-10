@@ -14,6 +14,7 @@ export const ENTIDADES = {
     naoEncontrado: 'Empresa parceira não encontrada.',
     vinculado: 'A empresa possui vantagens já resgatadas e não pode ser excluída.',
   },
+  vantagem: { naoEncontrado: 'Vantagem não encontrada.', vinculado: 'A vantagem já foi resgatada e não pode ser excluída.' },
 };
 
 export function traduzirErro(erro, entidade) {

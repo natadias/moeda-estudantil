@@ -30,34 +30,54 @@ Arquitetura: **MVC**.
 - CRUD de aluno e de empresa parceira: API REST em [backend/](backend/) e telas em [frontend/](frontend/)
 - O diagrama de componentes foi atualizado para mostrar a camada DAO.
 
+## Versão final dos CRUDs (Sprint 03 — Lab03S03)
+
+- **Autenticação:** login único para aluno, professor e empresa (login ou email + senha). A API emite um token JWT, e o front-end guarda a sessão e protege as rotas por perfil.
+- **Aluno:** cadastro público com entrada automática no sistema. Cada aluno consulta, edita (inclusive a senha) e exclui apenas o próprio cadastro.
+- **Empresa parceira:** cadastro público e listagem pública das parceiras. Cada empresa consulta, edita e exclui apenas o próprio cadastro.
+- **Vantagens da empresa:** cadastro com descrição, foto (upload) e custo em moedas, além de edição, ativação/desativação e exclusão. Uma vantagem já resgatada é desativada em vez de excluída.
+- **Professor:** lista os alunos da sua instituição, que é a base para o envio de moedas.
+- **Testes:** 31 testes de integração da API com banco PostgreSQL real (`cd backend && npm test`).
+- **Modelos atualizados:** [diagrama de componentes](docs/diagramas/componentes/diagrama-de-componentes.png) e [estratégia de persistência](docs/persistencia.md).
+
 ### Estrutura do código
 
 ```
 backend/
-  prisma/schema.prisma      # modelo de dados (ORM) + migrations/ + seed.js
+  prisma/schema.prisma      # modelo de dados (ORM) + migrations/ + seed.js + dados.js
   src/
-    routes/                 # rotas REST
+    routes/                 # rotas REST e regras de acesso por perfil
     controllers/            # Controller (HTTP)
-    services/               # regras de negócio e validação
+    services/               # regras de negócio, validação e autenticação
     dao/                    # padrão DAO sobre o Prisma
-    middlewares/  utils/  config/
+    middlewares/            # autenticação JWT, autorização, upload, erros
+    config/  utils/
+  tests/                    # testes de integração (node:test + supertest)
 frontend/
   src/
-    api/                    # comunicação com o back-end (Axios)
-    pages/alunos/           # listagem e formulário de aluno
-    pages/empresas/         # listagem e formulário de empresa
-    components/
+    api/                    # comunicação com o back-end (Axios + token)
+    contexts/AuthContext    # sessão do usuário
+    pages/                  # alunos/, empresas/, professor/, vantagens/, Login
+    components/             # Layout, RotaProtegida, Campo, Alerta...
 ```
 
 ### Endpoints
 
-| Método | Rota | Descrição |
-|---|---|---|
-| GET | `/api/instituicoes` | Instituições pré-cadastradas |
-| GET / POST | `/api/alunos` | Lista / cadastra aluno |
-| GET / PUT / DELETE | `/api/alunos/:id` | Consulta / atualiza / exclui aluno |
-| GET / POST | `/api/empresas` | Lista / cadastra empresa parceira |
-| GET / PUT / DELETE | `/api/empresas/:id` | Consulta / atualiza / exclui empresa parceira |
+| Método | Rota | Acesso | Descrição |
+|---|---|---|---|
+| POST | `/api/auth/login` | público | Login (login ou email + senha) → token JWT |
+| GET | `/api/auth/eu` | autenticado | Dados do usuário logado |
+| GET | `/api/instituicoes` | público | Instituições pré-cadastradas |
+| POST | `/api/alunos` | público | Cadastro de aluno |
+| GET | `/api/alunos` | professor | Alunos da instituição do professor |
+| GET / PUT / DELETE | `/api/alunos/:id` | o próprio aluno | Consulta / atualiza / exclui |
+| POST | `/api/empresas` | público | Cadastro de empresa parceira |
+| GET | `/api/empresas` | público | Lista de empresas parceiras |
+| GET / PUT / DELETE | `/api/empresas/:id` | a própria empresa | Consulta / atualiza / exclui |
+| GET | `/api/vantagens` | autenticado | Aluno: catálogo ativo · Empresa: as suas |
+| GET | `/api/vantagens/:id` | autenticado | Detalhe da vantagem |
+| POST / PUT | `/api/vantagens[/:id]` | empresa dona | Cadastro / edição (multipart com `foto`) |
+| DELETE | `/api/vantagens/:id` | empresa dona | Exclui ou, se já resgatada, desativa |
 
 ### Como executar
 
@@ -81,4 +101,22 @@ npm install
 npm run dev
 ```
 
-O seed cria 3 instituições e 2 professores (logins `ana.souza` e `carlos.lima`, senha `professor123`), cada um com o crédito de 1.000 moedas do semestre atual.
+### Contas de demonstração (criadas pelo seed)
+
+| Perfil | Login | Senha |
+|---|---|---|
+| Professora (PUC Minas) | `ana.souza` | `professor123` |
+| Professor (UFMG) | `carlos.lima` | `professor123` |
+| Aluna (PUC Minas) | `maria` | `123456` |
+| Empresa parceira | `cantina` | `123456` |
+
+Cada professor começa com o crédito de 1.000 moedas do semestre atual.
+
+### Testes
+
+```bash
+cd backend
+npm test   # cria/migra o banco moeda_estudantil_test e roda os testes de integração
+```
+
+
