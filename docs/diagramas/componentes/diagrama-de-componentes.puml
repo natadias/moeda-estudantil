@@ -1,20 +1,20 @@
 @startuml diagrama-de-componentes
-title Sistema de Moeda Estudantil - Diagrama de Componentes (MVC)
+title Sistema de Moeda Estudantil - Diagrama de Componentes (MVC, Release 02)
 skinparam componentStyle uml2
 left to right direction
 
 package "Front-end (React) - View" {
   [Paginas] as Paginas
   note right of Paginas
-    Login, Cadastro de Aluno,
-    Cadastro de Empresa, Perfis,
-    Meus Alunos, Vantagens,
-    Gestao de Vantagens,
-    Extrato, Envio de Moedas
+    Login, Cadastro de Aluno e de Empresa,
+    Perfis, Meus Alunos,
+    Enviar Moedas, Extrato, Vantagens
+    (catalogo e resgate), Gestao de
+    Vantagens, Cupons Resgatados
   end note
   [Componentes UI\n(Layout, RotaProtegida, ...)] as UI
   [AuthContext\n(sessao JWT)] as AuthCtx
-  [Cliente HTTP (Axios)\nalunoApi, empresaApi, vantagemApi] as Api
+  [Cliente HTTP (Axios)\nalunoApi, empresaApi,\nvantagemApi, transacaoApi] as Api
   Paginas --> UI
   Paginas --> AuthCtx
   Paginas --> Api
@@ -29,7 +29,6 @@ package "Back-end (Node.js + Express)" {
   package "Controller" {
     [AuthController]
     [AlunoController]
-    [ProfessorController]
     [EmpresaParceiraController]
     [InstituicaoEnsinoController]
     [VantagemController]
@@ -47,7 +46,7 @@ package "Back-end (Node.js + Express)" {
   }
 
   package "Model (persistencia)" {
-    [DAOs\n(UsuarioDAO, AlunoDAO, ProfessorDAO,\nEmpresaParceiraDAO, VantagemDAO,\nInstituicaoEnsinoDAO)] as DAO
+    [DAOs\n(UsuarioDAO, AlunoDAO, ProfessorDAO,\nEmpresaParceiraDAO, VantagemDAO,\nInstituicaoEnsinoDAO, TransacaoDAO)] as DAO
     [Prisma Client (ORM)\nschema.prisma] as Prisma
     DAO --> Prisma
   }

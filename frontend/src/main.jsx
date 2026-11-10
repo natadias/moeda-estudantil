@@ -12,7 +12,9 @@ import EmpresaLista from './pages/empresas/EmpresaLista';
 import PerfilEmpresa from './pages/empresas/PerfilEmpresa';
 import Home from './pages/Home';
 import Login from './pages/Login';
+import EnviarMoedas from './pages/professor/EnviarMoedas';
 import MeusAlunos from './pages/professor/MeusAlunos';
+import Extrato from './pages/transacoes/Extrato';
 import CatalogoVantagens from './pages/vantagens/CatalogoVantagens';
 import MinhasVantagens from './pages/vantagens/MinhasVantagens';
 import VantagemForm from './pages/vantagens/VantagemForm';
@@ -36,11 +38,14 @@ createRoot(document.getElementById('root')).render(
             <Route element={<RotaProtegida tipos={['ALUNO']} />}>
               <Route path="aluno/perfil" element={<PerfilAluno />} />
               <Route path="aluno/perfil/editar" element={<AlunoForm edicao />} />
+              <Route path="aluno/extrato" element={<Extrato />} />
               <Route path="vantagens" element={<CatalogoVantagens />} />
             </Route>
 
             <Route element={<RotaProtegida tipos={['PROFESSOR']} />}>
               <Route path="professor/alunos" element={<MeusAlunos />} />
+              <Route path="professor/enviar" element={<EnviarMoedas />} />
+              <Route path="professor/extrato" element={<Extrato />} />
             </Route>
 
             <Route element={<RotaProtegida tipos={['EMPRESA']} />}>
@@ -49,6 +54,7 @@ createRoot(document.getElementById('root')).render(
               <Route path="empresa/vantagens" element={<MinhasVantagens />} />
               <Route path="empresa/vantagens/nova" element={<VantagemForm />} />
               <Route path="empresa/vantagens/:id" element={<VantagemForm />} />
+              <Route path="empresa/cupons" element={<Extrato />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import alunoApi from '../../api/alunoApi';
 import { lerErro } from '../../api/http';
 import Alerta from '../../components/Alerta';
@@ -49,6 +50,7 @@ export default function MeusAlunos() {
                 <th>CPF</th>
                 <th>Curso</th>
                 <th className="num">Saldo</th>
+                <th />
               </tr>
             </thead>
             <tbody>
@@ -59,6 +61,11 @@ export default function MeusAlunos() {
                   <td>{formatarCpf(aluno.cpf)}</td>
                   <td>{aluno.curso}</td>
                   <td className="num">{aluno.saldoMoedas}</td>
+                  <td>
+                    <div className="acoes">
+                      <Link to={`/professor/enviar?aluno=${aluno.id}`} className="botao secundario">Enviar moedas</Link>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

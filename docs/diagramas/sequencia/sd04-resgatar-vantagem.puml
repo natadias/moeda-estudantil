@@ -1,0 +1,62 @@
+@startuml sd04-resgatar-vantagem
+title SD04 - Aluno lista vantagens e resgata uma delas
+autonumber
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+
+actor Aluno
+participant "CatalogoVantagens\n(React)" as UI
+participant "VantagemController" as VC
+participant "TransacaoController" as C
+participant "ResgateService" as S
+participant "VantagemDAO" as VDAO
+participant "AlunoDAO" as ADAO
+participant "TransacaoDAO" as TDAO
+database "PostgreSQL" as DB
+participant "EmailService" as Email
+actor "Empresa Parceira" as Empresa
+
+== Listar vantagens ==
+Aluno -> UI : abre "Vantagens"
+UI -> VC : GET /api/vantagens
+VC -> VDAO : findAll({somenteAtivas: true})
+VDAO -> DB : SELECT vantagem WHERE ativa
+DB --> VDAO : vantagens
+VDAO --> VC : vantagens
+VC --> UI : 200 [vantagens]
+UI --> Aluno : catálogo com foto, empresa, custo\ne o saldo do aluno
+
+== Resgatar vantagem ==
+Aluno -> UI : "Trocar moedas" e confirma
+UI -> C : POST /api/resgates {vantagemId}
+C -> S : resgatar(alunoId, {vantagemId})
+S -> VDAO : findById(vantagemId)
+VDAO --> S : vantagem
+S -> ADAO : findById(alunoId)
+ADAO --> S : aluno
+
+alt vantagem inativa ou inexistente
+  S --> C : AppError 404
+  C --> UI : 404
+else saldo do aluno < custo da vantagem
+  S --> C : AppError 422 "Saldo insuficiente"
+  C --> UI : 422
+  UI --> Aluno : mostra quanto falta
+else pode resgatar
+  S -> S : gerarCodigoCupom() (ex.: K7QX-3M9P)
+  S -> TDAO : resgatar(alunoId, vantagemId, custo, codigo)
+  group transação no banco
+    TDAO -> DB : UPDATE aluno SET saldo = saldo - custo\nWHERE saldo >= custo
+    TDAO -> DB : INSERT transacao (tipo RESGATE, codigo_cupom único)
+  end
+  DB --> TDAO : resgate
+  TDAO --> S : resgate
+  S -> Email : enviarCupom(resgate)
+  Email ->> Aluno : email com o código do cupom
+  S -> Email : notificarEmpresa(resgate)
+  Email ->> Empresa : email com o mesmo código, para conferir a troca
+  S --> C : resgate
+  C --> UI : 201 Created {codigoCupom}
+  UI --> Aluno : mostra o cupom e o novo saldo
+end
+@enduml

@@ -144,6 +144,15 @@ Formato: **Como** [papel], **quero** [ação], **para** [benefício]. Cada hist�
 
 **Caso de uso:** Gerenciar vantagens
 
+### US16 — Consultar cupons resgatados
+**Como** empresa parceira, **quero** ver os cupons gerados para as minhas vantagens, **para** conferir o código quando o aluno vier fazer a troca. *(Incluída na Release 02.)*
+
+**Critérios de aceitação:**
+- Lista data, código do cupom, aluno, vantagem e valor em moedas, do mais recente para o mais antigo.
+- A empresa só vê os resgates das próprias vantagens.
+
+**Caso de uso:** Consultar cupons resgatados
+
 ---
 
 ## Todos os usuários
@@ -172,5 +181,5 @@ Formato: **Como** [papel], **quero** [ação], **para** [benefício]. Cada hist�
 | Notificação por email ao receber moedas | US09 |
 | Extrato de professor e aluno | US10, US11 |
 | Cadastro de empresa e de vantagens (descrição, foto, custo) | US03, US04, US06, US07 |
-| Resgate com desconto do saldo, cupom e emails com código | US12, US13 |
+| Resgate com desconto do saldo, cupom e emails com código | US12, US13, US16 |
 | Login e senha para todos os perfis | US05 |

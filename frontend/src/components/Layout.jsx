@@ -5,11 +5,17 @@ const MENUS = {
   ALUNO: [
     { para: '/aluno/perfil', rotulo: 'Meu perfil' },
     { para: '/vantagens', rotulo: 'Vantagens' },
+    { para: '/aluno/extrato', rotulo: 'Extrato' },
     { para: '/empresas', rotulo: 'Empresas parceiras' },
   ],
-  PROFESSOR: [{ para: '/professor/alunos', rotulo: 'Meus alunos' }],
+  PROFESSOR: [
+    { para: '/professor/alunos', rotulo: 'Meus alunos' },
+    { para: '/professor/enviar', rotulo: 'Enviar moedas' },
+    { para: '/professor/extrato', rotulo: 'Extrato' },
+  ],
   EMPRESA: [
     { para: '/empresa/vantagens', rotulo: 'Minhas vantagens' },
+    { para: '/empresa/cupons', rotulo: 'Cupons resgatados' },
     { para: '/empresa/perfil', rotulo: 'Meu perfil' },
   ],
   ANONIMO: [{ para: '/empresas', rotulo: 'Empresas parceiras' }],

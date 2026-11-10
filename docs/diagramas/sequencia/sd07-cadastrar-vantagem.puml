@@ -1,0 +1,41 @@
+@startuml sd07-cadastrar-vantagem
+title SD07 - Empresa parceira cadastra vantagem com foto
+autonumber
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+
+actor "Empresa Parceira" as Empresa
+participant "VantagemForm\n(React)" as UI
+participant "Middlewares\nautenticar, autorizar('EMPRESA')" as MW
+participant "Upload\n(Multer)" as Up
+participant "VantagemController" as C
+participant "VantagemService" as S
+participant "VantagemDAO" as DAO
+database "PostgreSQL" as DB
+collections "uploads/\n(fotos)" as Pasta
+
+Empresa -> UI : nome, descrição, custo em moedas e foto
+UI -> MW : POST /api/vantagens (multipart/form-data)
+MW -> Up : receberFoto
+alt arquivo não é imagem ou passa de 2 MB
+  Up --> UI : 422
+else imagem válida
+  Up -> Pasta : grava com nome aleatório (UUID)
+  Up -> C : cadastrar(req, res) com fotoUrl
+  C -> S : cadastrar(empresaId, dados)
+  S -> S : valida nome, descrição, custo inteiro > 0 e foto
+  alt dados inválidos
+    S -> Pasta : remove a foto enviada
+    S --> C : AppError 422
+    C --> UI : 422
+  else dados válidos
+    S -> DAO : create({..., empresaId, ativa: true})
+    DAO -> DB : INSERT vantagem
+    DB --> DAO : vantagem
+    DAO --> S : vantagem
+    S --> C : vantagem
+    C --> UI : 201 Created
+    UI --> Empresa : vantagem aparece em "Minhas vantagens"\ne no catálogo dos alunos
+  end
+end
+@enduml

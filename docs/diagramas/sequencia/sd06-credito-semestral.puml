@@ -1,0 +1,44 @@
+@startuml sd06-credito-semestral
+title SD06 - Crédito semestral de 1.000 moedas aos professores
+autonumber
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+
+actor "Tempo\n(node-cron)" as Tempo
+participant "Agendador\n(jobs/agendador.js)" as Job
+participant "CreditoSemestralService" as S
+participant "TransacaoDAO" as TDAO
+database "PostgreSQL" as DB
+
+alt início do semestre (1º de janeiro e 1º de julho, 00:05)
+  Tempo -> Job : dispara creditarSemestre()
+else a API acabou de subir (recupera uma virada perdida)
+  Job -> Job : creditarSemestre()
+end
+
+Job -> S : creditar()
+S -> S : semestreAtual() → "2026.2"
+S -> TDAO : creditarSemestre("2026.2", 1000)
+TDAO -> DB : SELECT professor sem CREDITO_SEMESTRAL em 2026.2
+DB --> TDAO : professores pendentes
+
+loop para cada professor pendente
+  group transação no banco
+    TDAO -> DB : INSERT transacao (CREDITO_SEMESTRAL, 1000, "2026.2")
+    TDAO -> DB : UPDATE professor SET saldo = saldo + 1000
+  end
+  opt outro processo já creditou (UNIQUE professor_id, semestre)
+    DB --> TDAO : P2002: ignora, não credita em dobro
+  end
+end
+
+TDAO --> S : quantidade de professores creditados
+S --> Job : {semestre, valor, professoresCreditados}
+Job -> Job : registra no log da API
+
+note right of S
+  Cumulativo: soma ao saldo atual.
+  Idempotente: rodar de novo no mesmo
+  semestre não credita ninguém.
+end note
+@enduml

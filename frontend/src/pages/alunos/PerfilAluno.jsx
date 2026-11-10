@@ -43,7 +43,10 @@ export default function PerfilAluno() {
             <span>Saldo</span>
             <strong>{aluno.saldoMoedas.toLocaleString('pt-BR')}</strong>
             <span>moedas</span>
-            <Link to="/vantagens" className="botao secundario">Ver vantagens</Link>
+            <div className="botoes">
+              <Link to="/aluno/extrato" className="botao secundario">Ver extrato</Link>
+              <Link to="/vantagens" className="botao secundario">Trocar por vantagens</Link>
+            </div>
           </div>
 
           <div className="painel colunas">

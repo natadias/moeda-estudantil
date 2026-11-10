@@ -1,0 +1,55 @@
+@startuml sd02-cadastrar-usuario
+title SD02 - Aluno se cadastra (o cadastro de empresa parceira segue o mesmo fluxo)
+autonumber
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+
+actor Aluno
+participant "AlunoForm\n(React)" as UI
+participant "AuthContext" as Ctx
+participant "AlunoController" as C
+participant "AlunoService" as S
+participant "InstituicaoEnsinoDAO" as InstDAO
+participant "AlunoDAO" as DAO
+database "PostgreSQL" as DB
+
+Aluno -> UI : preenche dados pessoais, instituição,\ncurso, endereço, login e senha
+UI -> C : POST /api/alunos (rota pública)
+C -> S : cadastrar(req.body)
+S -> S : valida campos, CPF, email e endereço
+S -> InstDAO : findById(instituicaoId)
+InstDAO -> DB : SELECT instituicao_ensino
+DB --> InstDAO : instituição
+InstDAO --> S : instituição
+
+alt dados inválidos
+  S --> C : AppError 422 {detalhes por campo}
+  C --> UI : 422
+  UI --> Aluno : mostra os erros ao lado dos campos
+else dados válidos
+  S -> S : normaliza e gera o hash da senha (bcrypt)
+  S -> DAO : create(dados)
+  DAO -> DB : INSERT usuario, aluno, endereco\n(uma transação)
+  alt CPF, email ou login já existem
+    DB --> DAO : violação de unicidade (P2002)
+    DAO --> S : AppError 409
+    S --> C : AppError 409
+    C --> UI : 409 "Já existe um cadastro com este CPF."
+  else gravado
+    DB --> DAO : registros criados
+    DAO --> S : aluno
+    S --> C : aluno sem o hash da senha
+    C --> UI : 201 Created
+    UI -> Ctx : entrar(login, senha)
+    ref over Ctx, DB : SD01 Realizar login
+    UI --> Aluno : abre "Meu perfil" com saldo 0\ne mensagem de boas-vindas
+  end
+end
+
+note over S, DAO
+  Empresa parceira: EmpresaParceiraService
+  valida o CNPJ e grava usuario e empresa.
+  Professores não se cadastram: vêm
+  pré-cadastrados no banco (seed).
+end note
+@enduml

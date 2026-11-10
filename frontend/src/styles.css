@@ -131,3 +131,13 @@ legend { font-weight: 600; padding: 0 6px; }
 .foto-upload { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
 .foto-upload img, .foto-vazia { width: 180px; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; border: 1px solid var(--cor-borda); }
 .foto-vazia { display: grid; place-items: center; color: var(--cor-suave); background: #f0f2f6; }
+
+.saldo .botoes { margin-left: auto; align-self: center; }
+.saldo-pequeno { margin: 0; color: var(--cor-suave); }
+.saldo-pequeno strong { color: var(--cor-texto); }
+td.quebra { white-space: normal; min-width: 260px; }
+.entrada { color: #1d6b3d; font-weight: 600; }
+.saida { color: var(--cor-perigo); font-weight: 600; }
+.cupom { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-weight: 700; letter-spacing: 1px; background: #f0f2f6; padding: 2px 6px; border-radius: 4px; }
+fieldset > .campo { margin-top: 14px; }
+.vantagem .acoes { align-items: center; }

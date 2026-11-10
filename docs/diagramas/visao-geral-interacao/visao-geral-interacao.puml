@@ -1,0 +1,67 @@
+@startuml visao-geral-interacao
+title Sistema de Moeda Estudantil - Diagrama de Visão Geral de Interação
+skinparam ActivityBackgroundColor #FDFDFD
+skinparam ActivityBorderColor #444444
+skinparam ActivityDiamondBackgroundColor #F2F2F2
+
+' Cada nó "ref" é uma interação detalhada em docs/diagramas/sequencia.
+start
+if (Já tem conta?) then (não)
+  :ref
+  SD02 Cadastrar-se
+  (aluno ou empresa parceira);
+  note right
+    Professores vêm
+    pré-cadastrados no banco
+  end note
+else (sim)
+  :ref
+  SD01 Realizar login;
+  if (Credenciais válidas?) then (não)
+    :Mensagem "Login ou senha inválidos";
+    stop
+  else (sim)
+  endif
+endif
+
+switch (Tipo do usuário?)
+case (PROFESSOR)
+  :ref
+  SD03 Enviar moedas;
+  note right
+    Dispara o email
+    de notificação ao aluno
+  end note
+  :ref
+  SD05 Consultar extrato;
+case (ALUNO)
+  :ref
+  SD04 Listar vantagens;
+  if (Saldo >= custo da vantagem?) then (sim)
+    :ref
+    SD04 Resgatar vantagem;
+    note right
+      Gera o cupom e envia
+      emails ao aluno e à empresa
+    end note
+  else (não)
+  endif
+  :ref
+  SD05 Consultar extrato;
+case (EMPRESA)
+  :ref
+  SD07 Cadastrar vantagem;
+  :ref
+  SD05 Consultar cupons resgatados;
+endswitch
+
+:Realizar logout;
+stop
+
+legend right
+  Em paralelo, sem login:
+  o Agendador (node-cron) executa
+  SD06 Crédito semestral no início
+  de cada semestre.
+endlegend
+@enduml

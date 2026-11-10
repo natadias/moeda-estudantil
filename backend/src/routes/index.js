@@ -3,6 +3,7 @@ import alunoController from '../controllers/AlunoController.js';
 import authController from '../controllers/AuthController.js';
 import empresaController from '../controllers/EmpresaParceiraController.js';
 import instituicaoController from '../controllers/InstituicaoEnsinoController.js';
+import transacaoController from '../controllers/TransacaoController.js';
 import vantagemController from '../controllers/VantagemController.js';
 import { autenticar, autorizar, somenteProprio } from '../middlewares/autenticacao.js';
 import { receberFoto } from '../middlewares/upload.js';
@@ -31,5 +32,9 @@ routes.get('/vantagens/:id', autenticar, vantagemController.buscarPorId);
 routes.post('/vantagens', autenticar, autorizar('EMPRESA'), receberFoto, vantagemController.cadastrar);
 routes.put('/vantagens/:id', autenticar, autorizar('EMPRESA'), receberFoto, vantagemController.atualizar);
 routes.delete('/vantagens/:id', autenticar, autorizar('EMPRESA'), vantagemController.excluir);
+
+routes.post('/transferencias', autenticar, autorizar('PROFESSOR'), transacaoController.enviarMoedas);
+routes.post('/resgates', autenticar, autorizar('ALUNO'), transacaoController.resgatar);
+routes.get('/extrato', autenticar, autorizar('ALUNO', 'PROFESSOR', 'EMPRESA'), transacaoController.extrato);
 
 export default routes;

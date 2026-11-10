@@ -1,0 +1,40 @@
+@startuml sd05-consultar-extrato
+title SD05 - Consultar extrato (aluno, professor ou cupons da empresa)
+autonumber
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+
+actor "Aluno / Professor /\nEmpresa Parceira" as Usuario
+participant "Extrato\n(React)" as UI
+participant "Middlewares\nautenticar, autorizar" as MW
+participant "TransacaoController" as C
+participant "TransacaoService" as S
+participant "AlunoDAO /\nProfessorDAO" as PerfilDAO
+participant "TransacaoDAO" as TDAO
+database "PostgreSQL" as DB
+
+Usuario -> UI : abre "Extrato" (ou "Cupons resgatados")
+UI -> MW : GET /api/extrato
+MW -> C : extrato(req, res)\nreq.usuario = {id, tipo}
+C -> S : extrato({id, tipo})
+
+alt tipo = ALUNO
+  S -> PerfilDAO : AlunoDAO.findById(id)
+  PerfilDAO --> S : saldo do aluno
+  S -> TDAO : findExtrato({alunoId: id})
+else tipo = PROFESSOR
+  S -> PerfilDAO : ProfessorDAO.findById(id)
+  PerfilDAO --> S : saldo do professor
+  S -> TDAO : findExtrato({professorId: id})
+else tipo = EMPRESA
+  S -> TDAO : findExtrato({empresaId: id})\n(resgates das suas vantagens)
+end
+
+TDAO -> DB : SELECT transacao ... ORDER BY data_hora DESC
+DB --> TDAO : transações
+TDAO --> S : transações
+S -> S : marca cada uma como ENTRADA ou SAÍDA\ne remove os emails da resposta
+S --> C : {saldo, transacoes}
+C --> UI : 200
+UI --> Usuario : saldo e lista: recebimentos, envios,\ncréditos semestrais, trocas com cupom
+@enduml

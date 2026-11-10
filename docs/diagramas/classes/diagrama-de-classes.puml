@@ -39,6 +39,7 @@ class EmpresaParceira {
   + cadastrarVantagem(nome: String, descricao: String, foto: String, custo: Integer): Vantagem
   + editarVantagem(vantagem: Vantagem): void
   + removerVantagem(vantagem: Vantagem): void
+  + consultarCuponsResgatados(): List<ResgateVantagem>
 }
 
 class Endereco {

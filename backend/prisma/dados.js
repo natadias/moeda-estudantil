@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { semestreAtual } from '../src/utils/semestre.js';
 
 export const INSTITUICOES = [
   { nome: 'PUC Minas', cnpj: '17178195000167' },
@@ -13,8 +14,7 @@ export const PROFESSORES = [
 
 export const SENHA_PROFESSORES = 'professor123';
 
-const hoje = new Date();
-const SEMESTRE_ATUAL = `${hoje.getFullYear()}.${hoje.getMonth() < 6 ? 1 : 2}`;
+const SEMESTRE_ATUAL = semestreAtual();
 
 export async function popularBase(prisma) {
   for (const instituicao of INSTITUICOES) {

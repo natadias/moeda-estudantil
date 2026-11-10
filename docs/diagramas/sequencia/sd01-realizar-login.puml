@@ -1,0 +1,38 @@
+@startuml sd01-realizar-login
+title SD01 - Realizar login
+autonumber
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+
+actor Usuario
+participant "Login\n(React)" as UI
+participant "AuthContext" as Ctx
+participant "AuthController" as C
+participant "AuthService" as S
+participant "UsuarioDAO" as DAO
+database "PostgreSQL" as DB
+
+Usuario -> UI : informa login (ou email) e senha
+UI -> Ctx : entrar(login, senha)
+Ctx -> C : POST /api/auth/login {login, senha}
+C -> S : login(dados)
+S -> DAO : findByLoginOuEmail(login)
+DAO -> DB : SELECT usuario JOIN perfil
+DB --> DAO : usuario
+DAO --> S : usuario
+S -> S : bcrypt.compare(senha, senhaHash)
+
+alt usuario inexistente ou senha incorreta
+  S --> C : AppError 401
+  C --> Ctx : 401 "Login ou senha inválidos."
+  Ctx --> UI : erro
+  UI --> Usuario : mostra a mensagem (sem dizer qual campo errou)
+else credenciais corretas
+  S -> S : jwt.sign({tipo}, sub = id, expira em 8 h)
+  S --> C : {token, usuario}
+  C --> Ctx : 200 {token, usuario}
+  Ctx -> Ctx : guarda o token (localStorage)\ne o envia em cada requisição
+  Ctx --> UI : usuario
+  UI --> Usuario : abre a tela inicial do perfil\n(ADMIN, ALUNO, PROFESSOR ou EMPRESA)
+end
+@enduml

@@ -44,7 +44,8 @@ O [modelo ER](diagramas/er/modelo-er.png) foi derivado do [diagrama de classes](
 | `InstituicaoEnsinoDAO` | `findAll`, `findById`. As instituições são pré-cadastradas pelo seed. |
 | `UsuarioDAO` | `findByLoginOuEmail`, `findById`. Usado pela autenticação (Sprint 03). |
 | `VantagemDAO` | `create`, `findAll` (por empresa ou só ativas), `findById`, `update`, `delete`. Vantagens já resgatadas são desativadas em vez de apagadas (Sprint 03). |
-| `ProfessorDAO` | `findById`. Professores são pré-cadastrados; usado para filtrar os alunos da instituição do professor (Sprint 03). |
+| `ProfessorDAO` | `findById`. Professores são pré-cadastrados pelo seed; usado para filtrar os alunos da instituição do professor e para conferir o saldo no envio de moedas. |
+| `TransacaoDAO` | `transferir` e `resgatar`: débito condicional (`saldo >= valor`) e crédito/registro numa única transação, para dois pedidos simultâneos nunca deixarem saldo negativo. `findExtrato` (por aluno, professor ou empresa) e `creditarSemestre`, protegido pela restrição única `(professor_id, semestre)` (Release 02). |
 
 ## Testes da camada de persistência
 
@@ -60,6 +61,6 @@ npm test
 ```bash
 cd backend
 npx prisma migrate dev     # aplica/cria migrações
-npx prisma db seed         # instituições e professores pré-cadastrados
+npx prisma db seed         # instituições, professores e contas de demonstração
 npx prisma studio          # inspeciona o banco no navegador
 ```

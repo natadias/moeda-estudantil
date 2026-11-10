@@ -1,0 +1,51 @@
+@startuml sd03-enviar-moedas
+title SD03 - Professor envia moedas a um aluno
+autonumber
+skinparam sequenceMessageAlign left
+skinparam responseMessageBelowArrow true
+
+actor Professor
+participant "EnviarMoedas\n(React)" as UI
+participant "Middlewares\nautenticar, autorizar('PROFESSOR')" as MW
+participant "TransacaoController" as C
+participant "TransacaoService" as S
+participant "ProfessorDAO" as PDAO
+participant "AlunoDAO" as ADAO
+participant "TransacaoDAO" as TDAO
+database "PostgreSQL" as DB
+participant "EmailService" as Email
+actor Aluno
+
+Professor -> UI : escolhe o aluno, a quantidade e o motivo
+UI -> MW : POST /api/transferencias {alunoId, valor, motivo}
+MW -> C : enviarMoedas(req, res)
+C -> S : enviarMoedas(professorId, dados)
+S -> PDAO : findById(professorId)
+PDAO -> DB : SELECT professor
+DB --> PDAO : professor (saldo, instituição)
+PDAO --> S : professor
+S -> ADAO : findById(alunoId)
+ADAO -> DB : SELECT aluno
+DB --> ADAO : aluno
+ADAO --> S : aluno
+
+alt motivo vazio, valor <= 0, valor > saldo\nou aluno de outra instituição
+  S --> C : AppError 422 {detalhes}
+  C --> UI : 422
+  UI --> Professor : mostra os erros nos campos
+else dados válidos
+  S -> TDAO : transferir(professorId, alunoId, valor, motivo)
+  group transação no banco
+    TDAO -> DB : UPDATE professor SET saldo = saldo - valor\nWHERE saldo >= valor
+    TDAO -> DB : UPDATE aluno SET saldo = saldo + valor
+    TDAO -> DB : INSERT transacao (tipo TRANSFERENCIA)
+  end
+  DB --> TDAO : transferência
+  TDAO --> S : transferência
+  S -> Email : notificarMoedasRecebidas(transferencia)
+  Email ->> Aluno : email "Você recebeu N moedas!"\n(professor, quantidade e motivo)
+  S --> C : transferência
+  C --> UI : 201 Created
+  UI --> Professor : confirmação e saldo atualizado
+end
+@enduml

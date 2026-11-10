@@ -1,5 +1,5 @@
 @startuml casos-de-uso
-title Sistema de Moeda Estudantil - Diagrama de Casos de Uso
+title Sistema de Moeda Estudantil - Diagrama de Casos de Uso (Release 02)
 left to right direction
 skinparam packageStyle rectangle
 skinparam actorStyle awesome
@@ -38,6 +38,7 @@ rectangle "Sistema de Moeda Estudantil" {
   usecase "Cadastrar-se como empresa" as UC13
   usecase "Gerenciar perfil de empresa\n(consultar, editar, excluir)" as UC14
   usecase "Gerenciar vantagens\n(cadastrar, editar, remover)" as UC15
+  usecase "Consultar cupons resgatados" as UC20
 
   usecase "Creditar 1.000 moedas\nsemestrais" as UC16
 }
@@ -61,6 +62,7 @@ UC11 ..> UC12 : <<include>>
 Empresa --> UC13
 Empresa --> UC14
 Empresa --> UC15
+Empresa --> UC20
 
 Tempo --> UC16
 
