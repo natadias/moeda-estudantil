@@ -6,8 +6,8 @@ Sistema para estimular o reconhecimento do mérito estudantil por meio de uma mo
 
 | | Endereço |
 |---|---|
-| Front-end (Vercel) | `https://<preencher-após-o-deploy>.vercel.app` |
-| API (Render) | `https://<preencher-após-o-deploy>.onrender.com/api/health` |
+| Front-end (Vercel) | [moeda-estudantil-vert.vercel.app](https://moeda-estudantil-vert.vercel.app) |
+| API (Render) | [moeda-estudantil-api-pzt9.onrender.com/api](https://moeda-estudantil-api-pzt9.onrender.com/api/health) (verificação de saúde em `/api/health`) |
 
 A API está no plano gratuito do Render e hiberna após 15 minutos sem uso: **o primeiro acesso pode levar até 1 minuto**. Depois disso, responde normalmente.
 
@@ -109,13 +109,13 @@ O [diagrama de implantação](docs/diagramas/implantacao/diagrama-de-implantacao
 **API e banco no Render** (definidos em [render.yaml](render.yaml)):
 
 1. Em [render.com](https://render.com), **New → Blueprint** e escolha este repositório. O Render cria o PostgreSQL e o Web Service `moeda-estudantil-api`.
-2. Preencha `CORS_ORIGIN` com o endereço do front-end na Vercel (pode ser mais de um, separados por vírgula). `JWT_SECRET` é gerado automaticamente.
+2. No serviço `moeda-estudantil-api` → **Environment**, preencha `CORS_ORIGIN` com o endereço do front-end na Vercel, sem barra no final (pode ser mais de um, separados por vírgula). `JWT_SECRET` é gerado automaticamente. Depois de salvar, faça um novo deploy para a variável valer.
 3. Ao iniciar, o serviço roda `prisma migrate deploy`, o seed e a API. Confira em `https://<servico>.onrender.com/api/health`.
 
 **Front-end na Vercel** (configuração em [frontend/vercel.json](frontend/vercel.json)):
 
 1. Em [vercel.com](https://vercel.com), **Add New → Project**, importe o repositório e defina **Root Directory = `frontend`**.
-2. Crie a variável `VITE_API_URL = https://<servico>.onrender.com/api` e faça o deploy.
+2. Crie a variável `VITE_API_URL = https://<servico>.onrender.com/api` (com `/api` no final) **sem marcar Sensitive**: ela vai para o código do navegador de qualquer forma, e a Vercel não deixa mudar o tipo depois. Faça o deploy; se mudar a variável depois, use **Redeploy**, porque o Vite a grava no build.
 3. Volte ao Render e confirme que `CORS_ORIGIN` tem o endereço gerado pela Vercel.
 
 Decisões tomadas para a nuvem:
