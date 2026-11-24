@@ -1,0 +1,68 @@
+@startuml diagrama-de-implantacao
+title Sistema de Moeda Estudantil - Diagrama de Implantação (Lab04S02)
+skinparam nodesep 60
+skinparam ranksep 70
+skinparam node {
+  BackgroundColor #FDFDFD
+  BorderColor #444444
+}
+skinparam artifact {
+  BackgroundColor #FFFFFF
+}
+
+node "Computador ou celular do usuário" <<device>> as Dispositivo {
+  node "Navegador web" <<executionEnvironment>> as Navegador {
+    artifact "SPA React\n(index.html + bundle JS/CSS)" as SPA
+  }
+}
+
+cloud "GitHub" as GitHub {
+  artifact "Repositório\nnatadias/moeda-estudantil\n(branch main)" as Repo
+}
+
+cloud "Vercel" as Vercel {
+  node "Edge Network (CDN)" <<executionEnvironment>> as CDN {
+    artifact "frontend/dist\n(build Vite)" as Dist
+    artifact "vercel.json\n(rewrite para index.html)" as VercelCfg
+  }
+}
+
+cloud "Render (região Oregon)" as Render {
+  node "Web Service\nmoeda-estudantil-api" <<executionEnvironment>> as WebService {
+    node "Node.js 22+" <<executionEnvironment>> as Node {
+      artifact "API Express\n(backend/src)" as Api
+      artifact "Prisma Client" as Prisma
+      artifact "Agendador node-cron\n(crédito semestral)" as Cron
+    }
+  }
+  node "Render PostgreSQL" <<executionEnvironment>> as PgNode {
+    database "PostgreSQL 16\nmoeda_estudantil" as DB {
+      artifact "tabelas + migrations\n(fotos das vantagens em bytea)" as Schema
+    }
+  }
+}
+
+node "Servidor SMTP\n(opcional)" <<device>> as SMTP
+
+Navegador --> CDN : HTTPS\nHTML, JS, CSS
+Navegador --> WebService : HTTPS · REST/JSON\nAuthorization: Bearer JWT
+Api --> Prisma
+Prisma --> DB : TCP 5432 (rede interna)\nDATABASE_URL
+Api ..> SMTP : SMTP 587\n(sem SMTP_HOST, email vai para o log)
+Repo ..> Vercel : deploy automático\na cada push na main
+Repo ..> Render : deploy automático\n(render.yaml)
+
+Dist ..> SPA : baixado pelo navegador
+
+note bottom of WebService
+  build: npm ci (postinstall: prisma generate)
+  start: prisma migrate deploy && prisma db seed && node src/server.js
+  Plano free: hiberna após 15 min sem uso;
+  o primeiro acesso pode levar até 1 minuto.
+end note
+
+note right of CDN
+  Variável de build:
+  VITE_API_URL = https://<api>.onrender.com/api
+end note
+@enduml

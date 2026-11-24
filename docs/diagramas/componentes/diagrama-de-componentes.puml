@@ -53,7 +53,7 @@ package "Back-end (Node.js + Express)" {
 
   interface "IEmail" as IEmail
   [EmailService\n(Nodemailer)] as EmailSvc
-  [Upload de Fotos\n(Multer)] as Upload
+  [Upload de Fotos\n(Multer, em memoria)] as Upload
   [Agendador\n(node-cron)] as Cron
 
   IRest - Routes
@@ -69,12 +69,12 @@ package "Back-end (Node.js + Express)" {
   Cron --> [CreditoSemestralService]
 }
 
-database "PostgreSQL" as DB
+database "PostgreSQL\n(dados e fotos das vantagens)" as DB
 node "Servidor SMTP" as SMTP
-folder "Armazenamento\nde Imagens\n(uploads/)" as Storage
 
 Api --( IRest : HTTP/JSON\nBearer token
 Prisma --> DB : SQL
 EmailSvc --> SMTP : SMTP
-Upload --> Storage
+Upload ..> [VantagemController] : foto em memoria
+
 @enduml

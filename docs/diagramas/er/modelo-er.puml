@@ -70,7 +70,9 @@ entity "vantagem" as vantagem {
   --
   * nome : TEXT
   * descricao : TEXT
-  * foto_url : TEXT
+  * foto : BYTEA
+  * foto_tipo : TEXT
+  * foto_atualizada_em : TIMESTAMP
   * custo_moedas : INTEGER
   * ativa : BOOLEAN = true
   * empresa_id : INTEGER <<FK>>

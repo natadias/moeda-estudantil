@@ -36,7 +36,7 @@ class Professor {
 class EmpresaParceira {
   - nome: String
   - cnpj: String
-  + cadastrarVantagem(nome: String, descricao: String, foto: String, custo: Integer): Vantagem
+  + cadastrarVantagem(nome: String, descricao: String, foto: byte[], custo: Integer): Vantagem
   + editarVantagem(vantagem: Vantagem): void
   + removerVantagem(vantagem: Vantagem): void
   + consultarCuponsResgatados(): List<ResgateVantagem>
@@ -62,7 +62,8 @@ class Vantagem {
   - id: Integer
   - nome: String
   - descricao: String
-  - fotoUrl: String
+  - foto: byte[]
+  - fotoTipo: String
   - custoMoedas: Integer
   - ativa: Boolean
 }

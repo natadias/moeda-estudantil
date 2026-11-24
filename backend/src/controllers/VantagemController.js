@@ -12,6 +12,11 @@ class VantagemController {
     res.json(await vantagemService.buscarPorId(parseId(req.params.id)));
   }
 
+  async foto(req, res) {
+    const { dados, tipo } = await vantagemService.buscarFoto(parseId(req.params.id));
+    res.set('Cache-Control', 'public, max-age=31536000, immutable').type(tipo).send(dados);
+  }
+
   async cadastrar(req, res) {
     res.status(201).json(await vantagemService.cadastrar(req.usuario.id, req.body ?? {}));
   }

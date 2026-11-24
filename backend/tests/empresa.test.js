@@ -1,18 +1,12 @@
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
-import { UPLOAD_DIR } from '../src/config/upload.js';
-import { PNG, api, auth, instituicaoPorNome, login, novaEmpresa, novoAluno, prisma, resetarBanco } from './helpers.js';
+import { PNG, PNG_AZUL, api, auth, instituicaoPorNome, login, novaEmpresa, novoAluno, prisma, resetarBanco } from './helpers.js';
 
 function enviarVantagem(req, campos, foto = PNG, nomeArquivo = 'foto.png') {
   for (const [chave, valor] of Object.entries(campos)) req.field(chave, String(valor));
   if (foto) req.attach('foto', foto, nomeArquivo);
   return req;
 }
-
-const fotoExiste = (url) => fs.existsSync(path.join(UPLOAD_DIR, path.basename(url)));
-const aguardar = () => new Promise((r) => setTimeout(r, 50));
 
 describe('CRUD de empresa parceira e vantagens', () => {
   let empresa;
@@ -98,11 +92,14 @@ describe('CRUD de empresa parceira e vantagens', () => {
     });
     assert.equal(res.status, 201);
     assert.equal(res.body.empresa.id, empresa.id);
-    assert.match(res.body.fotoUrl, /^\/uploads\/.+\.png$/);
+    assert.match(res.body.fotoUrl, /^\/api\/vantagens\/\d+\/foto\?v=\d+$/);
+    assert.equal(res.body.foto, undefined);
     vantagem = res.body;
 
     const foto = await api().get(vantagem.fotoUrl);
     assert.equal(foto.status, 200);
+    assert.equal(foto.headers['content-type'], 'image/png');
+    assert.deepEqual(foto.body, PNG);
   });
 
   it('somente empresas cadastram vantagens', async () => {
@@ -133,18 +130,17 @@ describe('CRUD de empresa parceira e vantagens', () => {
     assert.equal(daEmpresa.body.length, 1);
   });
 
-  it('troca a foto e remove a antiga do disco', async () => {
-    const res = await enviarVantagem(api().put(`/api/vantagens/${vantagem.id}`).set(auth(token)), {
-      nome: 'Desconto no almoço',
-      descricao: '25% de desconto',
-      custoMoedas: 60,
-      ativa: true,
-    });
+  it('troca a foto e muda a URL para o navegador não usar a antiga do cache', async () => {
+    await new Promise((r) => setTimeout(r, 5));
+    const res = await enviarVantagem(
+      api().put(`/api/vantagens/${vantagem.id}`).set(auth(token)),
+      { nome: 'Desconto no almoço', descricao: '25% de desconto', custoMoedas: 60, ativa: true },
+      PNG_AZUL,
+    );
     assert.equal(res.status, 200);
     assert.notEqual(res.body.fotoUrl, vantagem.fotoUrl);
-    await aguardar();
-    assert.equal(fotoExiste(vantagem.fotoUrl), false);
-    assert.equal(fotoExiste(res.body.fotoUrl), true);
+    const foto = await api().get(res.body.fotoUrl);
+    assert.deepEqual(foto.body, PNG_AZUL);
     vantagem = res.body;
   });
 
@@ -173,12 +169,11 @@ describe('CRUD de empresa parceira e vantagens', () => {
     assert.equal(res.status, 409);
   });
 
-  it('exclui vantagem sem resgates e a foto correspondente', async () => {
+  it('exclui vantagem sem resgates junto com a foto', async () => {
     const nova = await enviarVantagem(api().post('/api/vantagens').set(auth(tokenOutra)), { nome: 'Caderno', descricao: 'Caderno universitário', custoMoedas: 30 });
     const res = await api().delete(`/api/vantagens/${nova.body.id}`).set(auth(tokenOutra));
     assert.equal(res.status, 204);
-    await aguardar();
-    assert.equal(fotoExiste(nova.body.fotoUrl), false);
+    assert.equal((await api().get(nova.body.fotoUrl)).status, 404);
   });
 
   it('empresa sem resgates exclui a própria conta junto com as vantagens', async () => {

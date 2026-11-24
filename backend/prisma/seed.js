@@ -1,12 +1,12 @@
 import { PrismaClient } from '@prisma/client';
-import { INSTITUICOES, PROFESSORES, popularBase, popularDemo } from './dados.js';
+import { INSTITUICOES, PROFESSORES, VANTAGENS_DEMO, popularBase, popularDemo } from './dados.js';
 
 const prisma = new PrismaClient();
 
 async function main() {
   await popularBase(prisma);
   await popularDemo(prisma);
-  console.log(`Seed concluído: ${INSTITUICOES.length} instituições, ${PROFESSORES.length} professores, 1 aluno e 1 empresa de demonstração.`);
+  console.log(`Seed concluído: ${INSTITUICOES.length} instituições, ${PROFESSORES.length} professores, 1 aluno, 1 empresa e ${VANTAGENS_DEMO.length} vantagens de demonstração.`);
 }
 
 main()

@@ -11,6 +11,8 @@ export const PNG = Buffer.from(
   'base64',
 );
 
+export const PNG_AZUL = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNQCT8KAAHjAUEYUii+AAAAAElFTkSuQmCC', 'base64');
+
 export async function resetarBanco() {
   await prisma.$executeRawUnsafe(
     'TRUNCATE transacao, vantagem, endereco, aluno, professor, empresa_parceira, usuario, instituicao_ensino RESTART IDENTITY CASCADE',

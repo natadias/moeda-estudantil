@@ -29,6 +29,7 @@ O [modelo ER](diagramas/er/modelo-er.png) foi derivado do [diagrama de classes](
   - Cada subclasse tem sua tabela, cuja PK é também FK para `usuario.id`.
   - Excluir o usuário remove a subclasse em cascata.
 - **Herança `Transacao` → `TransferenciaMoedas` / `ResgateVantagem` / `CreditoSemestral`:** uma única tabela `transacao` (*single table inheritance*), com a coluna `tipo` como discriminador. Isso simplifica o extrato, que é uma consulta só, ordenada por data.
+- **Fotos das vantagens:** gravadas na própria tabela `vantagem` (`foto BYTEA`, `foto_tipo`, `foto_atualizada_em`), porque o disco do servidor no Render é temporário. A URL pública inclui `foto_atualizada_em` como versão, para o navegador guardar a imagem em cache e buscar a nova quando ela muda (migração `20261124140000_foto_no_banco`).
 - **Composição `Aluno` → `Endereco`:** tabela `endereco` com `aluno_id` único e exclusão em cascata.
 - **Regras garantidas no banco:**
   - unicidade de email, login, CPF, CNPJ e código de cupom;
@@ -43,7 +44,7 @@ O [modelo ER](diagramas/er/modelo-er.png) foi derivado do [diagrama de classes](
 | `EmpresaParceiraDAO` | `create`, `findAll`, `findById`, `update`, `delete`. Grava usuário e empresa; as vantagens são removidas em cascata. |
 | `InstituicaoEnsinoDAO` | `findAll`, `findById`. As instituições são pré-cadastradas pelo seed. |
 | `UsuarioDAO` | `findByLoginOuEmail`, `findById`. Usado pela autenticação (Sprint 03). |
-| `VantagemDAO` | `create`, `findAll` (por empresa ou só ativas), `findById`, `update`, `delete`. Vantagens já resgatadas são desativadas em vez de apagadas (Sprint 03). |
+| `VantagemDAO` | `create`, `findAll` (por empresa ou só ativas), `findById`, `findFoto`, `update`, `delete`. Vantagens já resgatadas são desativadas em vez de apagadas (Sprint 03). As consultas omitem a coluna `foto` (`omit`); só `findFoto` lê os bytes da imagem (Release 02). |
 | `ProfessorDAO` | `findById`. Professores são pré-cadastrados pelo seed; usado para filtrar os alunos da instituição do professor e para conferir o saldo no envio de moedas. |
 | `TransacaoDAO` | `transferir` e `resgatar`: débito condicional (`saldo >= valor`) e crédito/registro numa única transação, para dois pedidos simultâneos nunca deixarem saldo negativo. `findExtrato` (por aluno, professor ou empresa) e `creditarSemestre`, protegido pela restrição única `(professor_id, semestre)` (Release 02). |
 

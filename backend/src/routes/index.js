@@ -29,6 +29,7 @@ routes.delete('/empresas/:id', autenticar, autorizar('EMPRESA'), somenteProprio,
 
 routes.get('/vantagens', autenticar, vantagemController.listar);
 routes.get('/vantagens/:id', autenticar, vantagemController.buscarPorId);
+routes.get('/vantagens/:id/foto', vantagemController.foto);
 routes.post('/vantagens', autenticar, autorizar('EMPRESA'), receberFoto, vantagemController.cadastrar);
 routes.put('/vantagens/:id', autenticar, autorizar('EMPRESA'), receberFoto, vantagemController.atualizar);
 routes.delete('/vantagens/:id', autenticar, autorizar('EMPRESA'), vantagemController.excluir);

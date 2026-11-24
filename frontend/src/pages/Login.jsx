@@ -15,8 +15,16 @@ export default function Login() {
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
 
+  const [lento, setLento] = useState(false);
+
   const [avisoInicial] = useState(aviso);
   useEffect(() => limparAviso(), [limparAviso]);
+
+  useEffect(() => {
+    if (!enviando) return setLento(false);
+    const espera = setTimeout(() => setLento(true), 4000);
+    return () => clearTimeout(espera);
+  }, [enviando]);
 
   if (usuarioInicial) return <Navigate to={INICIO_POR_TIPO[usuarioInicial.tipo]} replace />;
 
@@ -41,6 +49,7 @@ export default function Login() {
       <p className="dica">Alunos, professores e empresas parceiras usam o mesmo acesso.</p>
       <Alerta tipo="sucesso">{avisoInicial || state?.sucesso}</Alerta>
       <Alerta>{erro}</Alerta>
+      {lento && <p className="dica">O servidor gratuito pode levar até um minuto para acordar no primeiro acesso. Aguarde…</p>}
       <form className="formulario" onSubmit={enviar}>
         <Campo rotulo="Login ou email" nome="login" value={form.login} onChange={alterar} autoComplete="username" autoFocus required />
         <Campo rotulo="Senha" nome="senha" type="password" value={form.senha} onChange={alterar} autoComplete="current-password" required />

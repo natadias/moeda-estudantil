@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import bcrypt from 'bcryptjs';
 import { semestreAtual } from '../src/utils/semestre.js';
 
@@ -14,6 +15,12 @@ export const PROFESSORES = [
 
 export const SENHA_PROFESSORES = 'professor123';
 
+export const VANTAGENS_DEMO = [
+  { nome: 'Café com pão de queijo', descricao: 'Café coado e dois pães de queijo, em qualquer horário.', custoMoedas: 30, arquivo: 'cafe-pao-de-queijo.jpg' },
+  { nome: '20% de desconto no lanche', descricao: 'Desconto em qualquer sanduíche do cardápio.', custoMoedas: 50, arquivo: 'desconto-lanche.jpg' },
+  { nome: 'Almoço executivo', descricao: 'Prato do dia com suco e sobremesa.', custoMoedas: 80, arquivo: 'almoco-executivo.jpg' },
+];
+
 const SEMESTRE_ATUAL = semestreAtual();
 
 export async function popularBase(prisma) {
@@ -26,7 +33,7 @@ export async function popularBase(prisma) {
     const { id: instituicaoId } = await prisma.instituicaoEnsino.findUniqueOrThrow({ where: { cnpj: instituicao } });
     await prisma.usuario.upsert({
       where: { login },
-      update: {},
+      update: { senhaHash },
       create: {
         email,
         login,
@@ -51,7 +58,7 @@ export async function popularDemo(prisma) {
 
   await prisma.usuario.upsert({
     where: { login: 'maria' },
-    update: {},
+    update: { senhaHash },
     create: {
       email: 'maria.silva@email.com',
       login: 'maria',
@@ -72,9 +79,9 @@ export async function popularDemo(prisma) {
     },
   });
 
-  await prisma.usuario.upsert({
+  const cantina = await prisma.usuario.upsert({
     where: { login: 'cantina' },
-    update: {},
+    update: { senhaHash },
     create: {
       email: 'contato@cantinacentral.com.br',
       login: 'cantina',
@@ -83,4 +90,11 @@ export async function popularDemo(prisma) {
       empresa: { create: { nome: 'Cantina Central', cnpj: '11222333000181' } },
     },
   });
+
+  for (const { arquivo, ...vantagem } of VANTAGENS_DEMO) {
+    const existente = await prisma.vantagem.findFirst({ where: { empresaId: cantina.id, nome: vantagem.nome }, select: { id: true } });
+    if (existente) continue;
+    const foto = fs.readFileSync(new URL(`./imagens/${arquivo}`, import.meta.url));
+    await prisma.vantagem.create({ data: { ...vantagem, empresaId: cantina.id, foto, fotoTipo: 'image/jpeg' } });
+  }
 }
